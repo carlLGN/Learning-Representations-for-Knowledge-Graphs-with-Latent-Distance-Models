@@ -25,6 +25,5 @@ def initialize(k=2, mode="author2paper"):
 
 
 print(initialize())
-
 plt.scatter(initialize()[:,0],initialize()[:,1])
 plt.show()
