@@ -2,17 +2,29 @@ from load_data import load_subgraph
 import numpy as np
 import scipy
 import networkx as nx
+import matplotlib.pyplot as plt
 
 
 #Function uses subgraph for testing - remember to update!
-def initialize(k=2, mode="paper2paper"):
+def initialize(k=2, mode="author2paper"):
 
     G = load_subgraph(mode)
 
-    lap=nx.directed_laplacian_matrix(G)
-    _, eigenvectors = scipy.linalg.eigh(a=lap, subset_by_index=[0, k-1])
+    order = [p for p in list(G.nodes) if p.startswith("W")]+[a for a in list(G.nodes) if a.startswith("A")]
+
+
+    adj = nx.adjacency_matrix(G, nodelist = order).todense()
+
+    L = adj + adj.T
+    D = np.diag(np.sum(L, axis=1))
+
+    Lsym = np.sqrt(np.linalg.inv(D)) @ L @ (np.sqrt(np.linalg.inv(D)))
+    _, eigenvectors = scipy.linalg.eigh(a=Lsym, subset_by_index=[1,k])
 
     return eigenvectors
 
 
-initialize()
+print(initialize())
+
+plt.scatter(initialize()[:,0],initialize()[:,1])
+plt.show()
