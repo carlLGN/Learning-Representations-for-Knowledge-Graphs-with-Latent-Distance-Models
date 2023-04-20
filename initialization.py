@@ -15,8 +15,11 @@ def initialize(k=2, mode="author2paper"):
 
     adj = nx.adjacency_matrix(G, nodelist = order).todense()
 
-    L = adj + adj.T
-    D = np.diag(np.sum(L, axis=1))
+    A = adj + adj.T
+
+    D = np.diag(np.sum(A, axis=1))
+
+    L = D - A
 
     Lsym = np.sqrt(np.linalg.inv(D)) @ L @ (np.sqrt(np.linalg.inv(D)))
     _, eigenvectors = scipy.linalg.eigh(a=Lsym, subset_by_index=[1,k])
