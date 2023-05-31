@@ -21,9 +21,16 @@ def nx_to_edgelist(G=None):
     if not G:
         G = load_subgraph()
 
+    articles = set(list(G.nodes))
+    mapping = {a: i+1 for i,a in enumerate(articles)}
+    
+    #Update function to write reverse mapping to document?
+    
     with open("Data/paper2paper_edgelist", 'w', encoding='utf-8') as f:
         for i in G.edges():
-            #As all vertices in the paper2paper graph are papers (and thus start with a W)
-            #We remove 'W' by indexing in the string
-            f.write(str(i[0])[1:] + ' ' + str(i[1])[1:] + ' 1.0\n')
+            #We map all article values to a value between 1 and len articles
+            
+            f.write(str(mapping[i[0]]) + ' ' + str(mapping[i[1]]) + ' 1.0\n')
 
+nx_to_edgelist()
+    
