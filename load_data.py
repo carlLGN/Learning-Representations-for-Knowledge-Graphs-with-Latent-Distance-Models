@@ -14,4 +14,13 @@ def create_subgraph(mode = "paper2paper", nodes=1000):
     print(subgraph)
     nx.write_gml(subgraph, f"./Data/subgraph_{mode}.gml")
 
-    
+
+#Converts nx graph to edgelist. Takes nx graph.
+def nx_to_edgelist(G=None):
+
+    if not G:
+        G = load_subgraph()
+
+    with open("Data/paper2paper_edgelist", 'w', encoding='utf-8') as f:
+        for i in G.edges():
+            f.write(str(i[0]) + ' ' + str(i[1]) + ' 1.0\n')
