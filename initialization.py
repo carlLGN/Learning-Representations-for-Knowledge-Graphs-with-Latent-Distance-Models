@@ -10,7 +10,11 @@ def initialize(k=2, mode="author2paper"):
 
     G = load_subgraph(mode)
 
-    order = [p for p in list(G.nodes) if p.startswith("W")]+[a for a in list(G.nodes) if a.startswith("A")]
+    papers = [p for p in list(G.nodes) if p.startswith("W")]
+    authors = [a for a in list(G.nodes) if a.startswith("A")]
+
+    order = papers + authors
+
 
 
     adj = nx.adjacency_matrix(G, nodelist = order).todense()
@@ -24,9 +28,11 @@ def initialize(k=2, mode="author2paper"):
     Lsym = np.sqrt(np.linalg.inv(D)) @ L @ (np.sqrt(np.linalg.inv(D)))
     _, eigenvectors = scipy.linalg.eigh(a=Lsym, subset_by_index=[1,k])
 
-    return eigenvectors
+    return eigenvectors, len(papers), len(authors)
 
 
-print(initialize())
-plt.scatter(initialize()[:,0],initialize()[:,1])
+eigenvectors, npaper, nauthor = initialize()
+
+plt.scatter(eigenvectors[:npaper,0],eigenvectors[:npaper,1], c="blue", marker = ".", alpha=0.5)
+plt.scatter(eigenvectors[npaper:,0],eigenvectors[npaper:,1], c="orange", marker = "^", alpha = 0.5)
 plt.show()
