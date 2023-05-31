@@ -140,9 +140,9 @@ class LDM(torch.nn.Module):
 
         batch_edges, _ = spspmm(
             indexA=self.__edges.type(torch.long),
-            valueA=torch.ones(size=(self.__edges_num, ), dtype=torch.int, device=self.__device),
+            valueA=torch.ones(size=(self.__edges_num, ), dtype=torch.float, device=self.__device),
             indexB=torch.vstack((sampled_nodes, sampled_nodes)).type(torch.long),
-            valueB=torch.ones(size=(self.__batch_size,), dtype=torch.int, device=self.__device),
+            valueB=torch.ones(size=(self.__batch_size,), dtype=torch.float, device=self.__device),
             m=self.__nodes_num, k=self.__nodes_num, n=self.__nodes_num, coalesced=True
         )
 

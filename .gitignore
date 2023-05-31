@@ -128,3 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /Data/
+LDM/datasets/cora.edgelist
+LDM/datasets/dblp.edgelist
