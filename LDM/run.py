@@ -26,13 +26,13 @@ def parse_arguments():
         '--dim', type=int, default=2, required=False, help='Dimension size'
     )
     parser.add_argument(
-        '--epoch_num', type=int, default=500, required=False, help='Number of epochs'
+        '--epoch_num', type=int, default=200, required=False, help='Number of epochs'
     )
     parser.add_argument(
         '--spe', type=int, default=10, required=False, help='Number of steps per epoch'
     )
     parser.add_argument(
-        '--batch_size', type=int, default=2500, required=False, help='Batch size'
+        '--batch_size', type=int, default=None, required=False, help='Batch size'
     )
     parser.add_argument(
         '--lr', type=float, default=0.1, required=False, help='Learning rate'

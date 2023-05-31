@@ -22,7 +22,7 @@ def nx_to_edgelist(G=None):
         G = load_subgraph()
 
     articles = set(list(G.nodes))
-    mapping = {a: i+1 for i,a in enumerate(articles)}
+    mapping = {a: i for i,a in enumerate(articles)}
     
     #Update function to write reverse mapping to document?
     
@@ -33,4 +33,4 @@ def nx_to_edgelist(G=None):
             f.write(str(mapping[i[0]]) + ' ' + str(mapping[i[1]]) + ' 1.0\n')
 
 nx_to_edgelist()
-    
+
