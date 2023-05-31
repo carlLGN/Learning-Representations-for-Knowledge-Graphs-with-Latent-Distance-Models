@@ -23,4 +23,7 @@ def nx_to_edgelist(G=None):
 
     with open("Data/paper2paper_edgelist", 'w', encoding='utf-8') as f:
         for i in G.edges():
-            f.write(str(i[0]) + ' ' + str(i[1]) + ' 1.0\n')
+            #As all vertices in the paper2paper graph are papers (and thus start with a W)
+            #We remove 'W' by indexing in the string
+            f.write(str(i[0])[1:] + ' ' + str(i[1])[1:] + ' 1.0\n')
+
