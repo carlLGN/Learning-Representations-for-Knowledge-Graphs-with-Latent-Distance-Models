@@ -135,6 +135,7 @@ class LDM(torch.nn.Module):
 
         self.train()
 
+
         sampled_nodes = torch.multinomial(self.__sampling_weights, self.__batch_size, replacement=False)
         sampled_nodes, _ = torch.sort(sampled_nodes, dim=0)
 

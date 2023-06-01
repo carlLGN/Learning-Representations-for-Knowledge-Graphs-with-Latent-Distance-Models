@@ -32,7 +32,7 @@ def parse_arguments():
         '--spe', type=int, default=10, required=False, help='Number of steps per epoch'
     )
     parser.add_argument(
-        '--batch_size', type=int, default=None, required=False, help='Batch size'
+        '--batch_size', type=int, default=50, required=False, help='Batch size'
     )
     parser.add_argument(
         '--lr', type=float, default=0.1, required=False, help='Learning rate'
