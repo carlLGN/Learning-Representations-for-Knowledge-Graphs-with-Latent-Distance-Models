@@ -132,3 +132,8 @@ LDM/datasets/cora.edgelist
 LDM/datasets/dblp.edgelist
 ldm_cora.emb
 /LDM/ldm_paper2papertest.emb
+LDM/Data/author2paper_2000_gcc.gml
+LDM/Data/paper2paper_2000_gcc.gml
+LDM/Data/paper2paper_edgelist
+.gitignore
+ldm_paper2papertest.emb
