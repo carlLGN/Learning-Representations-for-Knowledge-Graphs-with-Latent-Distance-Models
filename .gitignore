@@ -135,5 +135,4 @@ ldm_cora.emb
 LDM/Data/author2paper_2000_gcc.gml
 LDM/Data/paper2paper_2000_gcc.gml
 LDM/Data/paper2paper_edgelist
-.gitignore
 ldm_paper2papertest.emb
