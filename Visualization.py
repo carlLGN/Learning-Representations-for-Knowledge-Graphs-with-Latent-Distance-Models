@@ -4,11 +4,7 @@ import numpy as np
 
 
 
-#plotting:
-
-
-
-
+#plotting functions:
 
 def read_emb(path):
     points=[]
