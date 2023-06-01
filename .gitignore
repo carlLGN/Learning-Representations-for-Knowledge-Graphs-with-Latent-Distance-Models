@@ -131,4 +131,4 @@ dmypy.json
 LDM/datasets/cora.edgelist
 LDM/datasets/dblp.edgelist
 ldm_cora.emb
-.vscode/launch.json
+/LDM/ldm_paper2papertest.emb
