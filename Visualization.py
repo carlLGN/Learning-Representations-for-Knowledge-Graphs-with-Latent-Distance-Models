@@ -29,7 +29,7 @@ def visualize(embs):
     plt.show()
 
 
-embs = np.asarray(read_emb("ldm_paper2papertest.emb"))
-print(embs)
-visualize(embs)
+#embs = np.asarray(read_emb("ldm_paper2papertest.emb"))
+#print(embs)
+#visualize(embs)
 
