@@ -1,8 +1,12 @@
 import networkx as nx
 
-def load_data(mode="paper2paper"):
-    return nx.read_gml(f"./Data/{mode}_2000_gcc.gml")
-    
+def load_data(mode="paper2paper", path=None):
+    if path:
+        return nx.read_gml(path)
+    else:
+        return nx.read_gml(f"./Data/{mode}_2000_gcc.gml")
+
+load_data()
 def load_subgraph(mode = "paper2paper"):
     return nx.read_gml(f"./Data/subgraph_{mode}.gml")
     
@@ -31,6 +35,3 @@ def nx_to_edgelist(G=None):
             #We map all article values to a value between 1 and len articles
             
             f.write(str(mapping[i[0]]) + ' ' + str(mapping[i[1]]) + ' 1.0\n')
-
-nx_to_edgelist()
-
