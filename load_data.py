@@ -6,7 +6,6 @@ def load_data(mode="paper2paper", path=None):
     else:
         return nx.read_gml(f"./Data/{mode}_2000_gcc.gml")
 
-load_data()
 def load_subgraph(mode = "paper2paper"):
     return nx.read_gml(f"./Data/subgraph_{mode}.gml")
     
