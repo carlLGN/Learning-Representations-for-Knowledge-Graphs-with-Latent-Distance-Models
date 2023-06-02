@@ -25,7 +25,7 @@ def initialize(k=2, combined=True):
 
         #We now perform SVD to get u and v
 
-        p_star, s,V = scipy.linalg.svd(adj)
+        p_star, s,V = scipy.sparse.linalg.svds(adj, k=k)
 
 
         #U is the initialization of citing papers (p*)
