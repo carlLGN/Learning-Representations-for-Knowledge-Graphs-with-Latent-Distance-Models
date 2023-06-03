@@ -3,9 +3,10 @@ from load_data import load_data
 import numpy as np
 import scipy
 import networkx as nx
+from tqdm import tqdm
 
 
-#Function uses subgraph for testing - remember to update!
+
 def initialize(k=2, combined=True):
     G1 = load_data(path="./Data/paper2paper.gml")
     print("First Graph Loaded")
@@ -13,11 +14,10 @@ def initialize(k=2, combined=True):
 
     print("Data Loaded")
 
-
+    #This piece of code handles papers that appear in the citation network,
+    #but not in the author-paper netowrk
     nodelist=list(G1.nodes())
-    N_nodes = len(nodelist)
-    for i, node in enumerate(nodelist):
-        print(f'{i/N_nodes*100} %')
+    for node in tqdm(nodelist):
         if not G2.has_node(node):
             G1.remove_node(node)
 
@@ -25,7 +25,7 @@ def initialize(k=2, combined=True):
     if combined:
         #We order by papers in the adjacency matrices so we can easily concatenate.
 
-        paperorder = [p for p in list(G1.nodes)]
+        paperorder = [paper for paper in list(G1.nodes)]
         n = len(paperorder)
 
         print("Constructing Adjacency Matrices")
@@ -37,17 +37,17 @@ def initialize(k=2, combined=True):
         print("Concatenating")
         adj = scipy.sparse.hstack([adjp2p,adja2p])
 
-        #We now perform SVD to get u and v
+        #We now perform SVD to get u (p*) and v
 
         print("performing SVD")
-        p_star, s,V = scipy.sparse.linalg.svds(adj, k=k)
+        p_star, _, V = scipy.sparse.linalg.svds(adj, k=k)
 
         print("SVD Done")
         #U is the initialization of citing papers (p*)
         #V is the initalization of both cited papers (p) and authors (a)
 
-        p = V[:n]
-        a = V[n:]
+        p = V.T[:n]
+        a = V.T[n:]
 
 
         return p_star, p, a
@@ -85,17 +85,19 @@ def save_initializations(k=2, combined=True):
         p_star, p, a = initialize(k=k, combined=True)
 
         inits = [p_star, p, a]
+        name = ['p_star','p','a']
 
     else:
         p2p, a2p = initialize(k=k, combined=False)
 
         inits = [p2p, a2p]
-    #this is a bug:
+        name = ['p2p', 'a2p']
+
     print("Saving Embeddings")
-    for values in inits:
-        with open(f"{values}_init.txt", 'w',encoding="uft-8") as f:
+    for i, values in enumerate(inits):
+        with open(f"./Embeddings/{name[i]}_init.emb", 'w',encoding="utf-8") as f:
             f.write(f"{np.shape(values)}\n")
-            for i in range(len(values)):
+            for i in tqdm(range(len(values))):
                 f.write(f"{i}" + " " + f"{values[i]}\n")
 
 save_initializations(k=2, combined=True)
