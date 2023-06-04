@@ -12,6 +12,11 @@ def initialize(k=2, combined=True):
     print("First Graph Loaded")
     G2 = load_data(path="./Data/author2paper.gml")
 
+    #The Author to Paper graph is loaded as a directed graph.
+
+    G2 = G2.to_undirected()
+
+
     print("Data Loaded")
 
     #This piece of code handles papers that appear in the citation network,
@@ -26,20 +31,23 @@ def initialize(k=2, combined=True):
         #We order by papers in the adjacency matrices so we can easily concatenate.
 
         paperorder = [paper for paper in list(G1.nodes)]
+        authororder = [author for author in list(G2.nodes) if author.startswith('A')]
         n = len(paperorder)
+
 
         print("Constructing Adjacency Matrices")
         adjp2p = nx.adjacency_matrix(G1, nodelist = paperorder)
-        adja2p = nx.adjacency_matrix(G2, nodelist = paperorder)
+        adja2p = nx.bipartite.biadjacency_matrix(G2, row_order = paperorder+authororder, column_order = paperorder+authororder)[:n,n:]
 
         #We concatenate the adjacency matrices into one adjacency matrix.
 
         print("Concatenating")
-        adj = scipy.sparse.hstack([adjp2p,adja2p])
+        adj = scipy.sparse.hstack([adjp2p,adja2p], dtype=np.single)
 
         #We now perform SVD to get u (p*) and v
 
         print("performing SVD")
+        #DATATYPE PROBLEMS?
         p_star, _, V = scipy.sparse.linalg.svds(adj, k=k)
 
         print("SVD Done")
