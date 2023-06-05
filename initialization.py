@@ -108,4 +108,9 @@ def save_initializations(k=2, combined=True):
             for i in tqdm(range(len(values))):
                 f.write(f"{i}" + " " + f"{values[i]}\n")
 
-save_initializations(k=2, combined=True)
+
+#Tilføjet in case man vil kalde save initialization fra andre filer
+if __name__ == '__main__':
+    save_initializations(k=2, combined=True)
+    
+    print('debug')

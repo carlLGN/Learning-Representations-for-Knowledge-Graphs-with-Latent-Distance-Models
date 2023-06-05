@@ -1,5 +1,9 @@
+#Multimodal LDM model - Carl Nørlund, Malthe Bresler, Sara Andersen & Jacob Corkill
+# @2023
+
 import torch
 from torch_sparse import spspmm
+from utils import init_embeddings
 import math
 import time
 import sys
@@ -7,7 +11,7 @@ import random
 
 
 class LDM(torch.nn.Module):
-    def __init__(self,  edges, dim, lr=0.1, epoch_num=100, batch_size = 0, spe=1, device=torch.device("cpu"),
+    def __init__(self,  edges, emb_file, dim, lr=0.1, epoch_num=100, batch_size = 0, spe=1, device=torch.device("cpu"),
                  verbose=False, seed=0):
         super(LDM, self).__init__()
 
@@ -23,14 +27,26 @@ class LDM(torch.nn.Module):
         # Set the seed
         self.__set_seed(self.__seed)
 
+        #Get initial embeddings
+        p_star_init, p_init, a_init = init_embeddings()
+        
         # Initialize the parameters
-        self.__beta = torch.nn.Parameter(
+        self.__beta_ap = torch.nn.Parameter(
             2 * torch.rand(size=(self.__nodes_num,), device=self.__device) - 1, requires_grad=True
         )
-        self.__z = torch.nn.Parameter(
-            2 * torch.rand(size=(self.__nodes_num, self.__dim), device=self.__device) - 1, requires_grad=True
+        self.__gamma_pp = torch.nn.Parameter(
+            2 * torch.rand(size=(self.__nodes_num,), device=self.__device) - 1, requires_grad=True
         )
-
+        self.__p = torch.nn.Parameter(
+            torch.as_tensor(init_embeddings(emb_file)[0]), requires_grad=True
+        )
+        self.__p_star = torch.nn.Parameter(
+            torch.as_tensor(init_embeddings(emb_file)[1]), requires_grad=True
+        )
+        self.__a = torch.nn.Parameter(
+            torch.as_tensor(init_embeddings(emb_file)[2]), requires_grad=True
+        )
+        
         self.__epoch_num = epoch_num
         self.__steps_per_epoch = spe
         self.__batch_size = batch_size if batch_size else self.__nodes_num
@@ -52,17 +68,41 @@ class LDM(torch.nn.Module):
 
         return self.__z
 
-    def get_intensity_sum(self, nodes=None):
+    def get_intensity_sum_ap(self, nodes=None):
 
-        beta = self.__beta if nodes is None else torch.index_select(self.__beta, index=nodes, dim=0)
-        z = self.__z if nodes is None else torch.index_select(self.__z, index=nodes, dim=0)
+        beta = self.__beta_ap if nodes is None else torch.index_select(self.__beta_ap, index=nodes, dim=0)
+        p = self.__p if nodes is None else torch.index_select(self.__p, index=nodes, dim=0)
+        p_star = self.__p_star if nodes is None else torch.index_select(self.__p_star, index=nodes, dim=0)        
 
         beta_mat = beta.unsqueeze(0) + beta.unsqueeze(1)
-        dist_mat = torch.cdist(z, z, p=2)
+        dist_mat = torch.cdist(p_star, p, p=2)
 
         return torch.triu(torch.exp(beta_mat - dist_mat), diagonal=1).sum()
+    
+    def get_intensity_sum_pp(self, nodes=None):
+        
+        gamma = self.__gamma_pp if nodes is None else torch.index_select(self.__gamma_pp, index=nodes, dim=0)
+        p = self.__p if nodes is None else torch.index_select(self.__p, index=nodes, dim=0)
+        p_star = self.__p_star if nodes is None else torch.index_select(self.__p_star, index=nodes, dim=0)
+        
+        gamma_mat = gamma.unsqueeze(0) + gamma.unsqueeze(1)
+        dist_mat = torch.cdist(p_star, p, p=2)
 
-    def get_log_intensity_sum(self, edges):
+        return torch.triu(torch.exp(gamma_mat - dist_mat), diagonal=1).sum()
+
+    def get_log_intensity_sum_ap(self, edges):
+
+        beta_pair = torch.index_select(self.__a, index=edges[0], dim=0) + \
+                    torch.index_select(self.__p_star, index=edges[1], dim=0)
+
+        z_dist = self.__pdist(
+            torch.index_select(self.__a, index=edges[0], dim=0),
+            torch.index_select(self.__p_star, index=edges[1], dim=0),
+        )
+
+        return (beta_pair - z_dist).sum()
+    
+    def get_log_intensity_sum_pp(self, edges):
 
         beta_pair = torch.index_select(self.__beta, index=edges[0], dim=0) + \
                     torch.index_select(self.__beta, index=edges[1], dim=0)
@@ -89,7 +129,7 @@ class LDM(torch.nn.Module):
         # Compute the non-link term
         non_link = self.get_intensity_sum(nodes=nodes)
 
-        return -(link_term - non_link)
+        return -(link_term - non_link) 
 
     def learn(self):
 
