@@ -39,7 +39,6 @@ def paper_size(data):
 
 #print(paper_size(paper2paper_edgelist))
 
-# GØR DET HER PLOT PÆNERE
 def plot_paper_size(data):
     x = data[:, 0]
     y = data[:, 1]
