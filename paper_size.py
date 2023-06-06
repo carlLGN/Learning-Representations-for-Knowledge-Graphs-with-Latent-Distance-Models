@@ -19,13 +19,6 @@ def read_emb3(path):
                 points.append((s,u,v))
     return points
 
-author2paper_edgelist = np.asarray(read_emb3('Data/author2paper_edgelist'))
-#print(author2paper_edgelist)
-
-paper2paper_edgelist = np.asarray(read_emb3('Data/paper2paper_edgelist'))
-#print(paper2paper_edgelist)
-
-ldm_paper2paper = np.asarray(read_emb('LDM/ldm_paper2paper.emb'))
 
 def paper_size(data):
     # Papers cited by other papers. Index occurs every time a paper cited.
@@ -37,19 +30,28 @@ def paper_size(data):
         amount_of_citations[all_paper_citations[i].astype(int)] += 1
     return amount_of_citations
 
-#print(paper_size(paper2paper_edgelist))
 
-def plot_paper_size(data):
+def plot_paper_size(path):
+    data = np.asarray(read_emb(path))
+
     x = data[:, 0]
     y = data[:, 1]
 
     s = paper_size(paper2paper_edgelist).astype(float)*2
     color = s/np.max(s)
     plt.scatter(x, y, s=s, c=1-color, alpha=.8,cmap=mpl.colormaps['winter'],edgecolors='black', linewidth=0.3)
-    plt.colorbar()
+    #plt.colorbar()
     plt.show()
 
-print(plot_paper_size(ldm_paper2paper))
+
+if __name__ == '__main__':
+    author2paper_edgelist = np.asarray(read_emb3('Data/author2paper_edgelist'))
+    # print(author2paper_edgelist)
+
+    paper2paper_edgelist = np.asarray(read_emb3('Data/paper2paper_edgelist'))
+    # print(paper2paper_edgelist)
+
+    print(plot_paper_size('LDM/ldm_paper2paper.emb'))
 
 #def author_size():
 #    count_papers_pr_author = np.zeros()
