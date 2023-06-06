@@ -106,7 +106,7 @@ def save_initializations(k=2, combined=True):
         with open(f"./Embeddings/{name[i]}_init.emb", 'w',encoding="utf-8") as f:
             f.write(f"{np.shape(values)}\n")
             for i in tqdm(range(len(values))):
-                f.write(f"{i}" + " " + f"{values[i]}\n")
+                f.write(f"{i}" + " " + f"{values[i][0]}"+" "+f"{values[i][0]}\n")
 
 
 #Tilføjet in case man vil kalde save initialization fra andre filer
