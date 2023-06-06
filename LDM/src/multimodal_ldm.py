@@ -28,7 +28,7 @@ class LDM(torch.nn.Module):
         self.__set_seed(self.__seed)
 
         #Get initial embeddings
-        p_star_init, p_init, a_init = init_embeddings()
+        p, p_star, a = init_embeddings(emb_file)
         
         # Initialize the parameters
         self.__beta_ap = torch.nn.Parameter(
@@ -37,8 +37,6 @@ class LDM(torch.nn.Module):
         self.__gamma_pp = torch.nn.Parameter(
             2 * torch.rand(size=(self.__nodes_num,), device=self.__device) - 1, requires_grad=True
         )
-
-        p, p_star, a = init_embeddings(emb_file)
 
         self.__p = torch.nn.Parameter(
             torch.as_tensor(p), requires_grad=True
