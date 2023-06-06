@@ -37,14 +37,17 @@ class LDM(torch.nn.Module):
         self.__gamma_pp = torch.nn.Parameter(
             2 * torch.rand(size=(self.__nodes_num,), device=self.__device) - 1, requires_grad=True
         )
+
+        p, p_star, a = init_embeddings(emb_file)
+
         self.__p = torch.nn.Parameter(
-            torch.as_tensor(init_embeddings(emb_file)[0]), requires_grad=True
+            torch.as_tensor(p), requires_grad=True
         )
         self.__p_star = torch.nn.Parameter(
-            torch.as_tensor(init_embeddings(emb_file)[1]), requires_grad=True
+            torch.as_tensor(p_star), requires_grad=True
         )
         self.__a = torch.nn.Parameter(
-            torch.as_tensor(init_embeddings(emb_file)[2]), requires_grad=True
+            torch.as_tensor(a), requires_grad=True
         )
         
         self.__epoch_num = epoch_num
