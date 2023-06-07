@@ -38,20 +38,20 @@ def plot_paper_size(path):
     y = data[:, 1]
 
     s = paper_size(paper2paper_edgelist).astype(float)*2
-    color = s/np.max(s)
+    color = 1/np.sum(s)*s
     plt.scatter(x, y, s=s, c=1-color, alpha=.8,cmap=mpl.colormaps['winter'],edgecolors='black', linewidth=0.3)
     #plt.colorbar()
     plt.show()
 
 
 if __name__ == '__main__':
-    author2paper_edgelist = np.asarray(read_emb3('Data/author2paper_edgelist'))
+    #author2paper_edgelist = np.asarray(read_emb3('Data/author2paper_edgelist'))
     # print(author2paper_edgelist)
 
     paper2paper_edgelist = np.asarray(read_emb3('Data/paper2paper_edgelist'))
     # print(paper2paper_edgelist)
 
-    print(plot_paper_size('LDM/ldm_paper2paper.emb'))
+    print(plot_paper_size('./Embeddings/p_init.emb'))
 
 #def author_size():
 #    count_papers_pr_author = np.zeros()
