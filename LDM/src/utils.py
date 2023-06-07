@@ -29,25 +29,29 @@ def visualize(embs):
     plt.show()
     
     
-def init_embeddings(files):
+def read_embeddings(files):
     #Files must be in correct order
-    embs = [[None], [None], [None]]
+    #P-star, P, A
+    embs = [[], [], []]
     
     for i, file in enumerate(files):
         with open(file, "r", encoding='utf-8') as f:
-            line = f.readlines()
-            if len(line) == 2:
-                _, dim = line
-            else:
-                embs[i].append([int(line[k]) for k in range(dim)])
+            lines = f.readlines()
+            for j, line in enumerate(lines):
+                line = line.split()
+                if j == 0:
+                    #(_, dim) = line
+                    continue
+                else:
+                    embs[i].append([float(line[k]) for k in range(1, len(line))])
         
         embs[i] = np.array(embs[i])
         
     return embs[0], embs[1], embs[2]
 
 if __name__ == '__main__':
-    init_embeddings("sub")
-            
+    read_embeddings(["./Embeddings/p_star_init.emb", "./Embeddings/p_init.emb", "./Embeddings/a_init.emb"])
+
             
             
             
