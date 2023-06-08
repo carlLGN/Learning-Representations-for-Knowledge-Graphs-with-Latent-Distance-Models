@@ -1,5 +1,7 @@
 import networkx as nx
 from tqdm import tqdm
+from operator import itemgetter
+import numpy as np
 
 def load_data(mode="paper2paper", path=None):
     if path:
@@ -25,7 +27,10 @@ def nx_to_edgelist(save_path, G=None):
     if not G:
         G = load_subgraph()
 
-    articles = set(list(G.nodes))
+    dates = [(lis[0], lis[2]) for lis in G.edges(data='date')]
+    dates_sorted = sorted(dates,key=itemgetter(1))
+    articles = np.asarray(dates_sorted)[:,0]
+
     mapping = {a: i for i,a in enumerate(articles)}
     
     #Update function to write reverse mapping to document?
@@ -55,4 +60,5 @@ def create_edgelists():
     nx_to_edgelist("Data/author2paper_edgelist", G2)
 
 if __name__ == '__main__':
-    create_edgelists()
+    #create_edgelists()
+    nx_to_edgelist(save_path='Data/paper2paper_edgelist')
