@@ -33,6 +33,7 @@ def initialize(k=2, combined=True):
         paperorder = [paper for paper in list(G1.nodes)]
         authororder = [author for author in list(G2.nodes) if author.startswith('A')]
         n = len(paperorder)
+        m = len(authororder)
 
 
         print("Constructing Adjacency Matrices")
@@ -42,21 +43,36 @@ def initialize(k=2, combined=True):
         #We concatenate the adjacency matrices into one adjacency matrix.
 
         print("Concatenating")
-        adj = scipy.sparse.hstack([adjp2p,adja2p], dtype=np.single)
+        adj = scipy.sparse.hstack([adjp2p,adja2p], dtype = np.single)
+
+
+        print("Creating Laplacian Matrix")
+        ul = scipy.sparse.csr_matrix((n,n))
+        lr = scipy.sparse.csr_matrix((n+m, n+m))
+
+        top_row = scipy.sparse.hstack([ul, adj], dtype = np.single)
+        bot_row = scipy.sparse.hstack([adj.T, lr], dtype = np.single)
+
+        L = scipy.sparse.vstack([top_row, bot_row], dtype = np.single)
+
 
         #We now perform SVD to get u (p*) and v
 
-        print("performing SVD")
-        #DATATYPE PROBLEMS?
-        p_star, _, V = scipy.sparse.linalg.svds(adj, k=k)
+        print("Computing Eigenvectors")
+        #p_star, _, V = scipy.sparse.linalg.svds(adj, k=k+1)
 
-        print("SVD Done")
+        _, eigenvectors = scipy.sparse.linalg.eigsh(L, k=k+1)
+
+        print("Eigenvectors Computed")
         #U is the initialization of citing papers (p*)
         #V is the initalization of both cited papers (p) and authors (a)
 
-        p = V.T[:n]
-        a = V.T[n:]
+        #p = V.T[:n]
+        #a = V.T[n:]
 
+        p_star = eigenvectors[:n, 1:k+1]
+        p = eigenvectors[n:2*n, 1:k+1]
+        a = eigenvectors[2*n:, 1:k+1]
 
         return p_star, p, a
 
@@ -106,7 +122,7 @@ def save_initializations(k=2, combined=True):
         with open(f"./Embeddings/{name[i]}_init.emb", 'w',encoding="utf-8") as f:
             f.write(f"{np.shape(values)}\n")
             for i in tqdm(range(len(values))):
-                f.write(f"{i}" + " " + f"{values[i][0]}"+" "+f"{values[i][0]}\n")
+                f.write(f"{i}" + " " + f"{values[i][0]}"+" "+f"{values[i][1]}\n")
 
 
 #Tilføjet in case man vil kalde save initialization fra andre filer
