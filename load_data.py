@@ -22,17 +22,14 @@ def create_subgraph(mode = "paper2paper", nodes=1000):
 
 
 #Converts nx graph to edgelist. Takes nx graph.
-def nx_to_edgelist(): #G=None
-
-    # if not G:
-    #     G = load_subgraph()
+def nx_to_edgelist():
 
     G=load_data(path="./Data/paper2paper.gml")
 
-    print('graph loaded')
+    print('First Graph Loaded')
     G1=load_data(path="./Data/author2paper.gml")
 
-    print('graph loaded')
+    print('Second Graph Loaded')
 
 
     nodelist = list(G.nodes())
@@ -40,18 +37,23 @@ def nx_to_edgelist(): #G=None
         if not G1.has_node(node):
             G.remove_node(node)
 
+
+    print('Removing Nodes That Do Not Exist In Both Graphs')
     nodelist = [node for node in G1.nodes if node[0]=='W']
     for node in tqdm(nodelist):
         if not G.has_node(node):
             G1.remove_node(node)
 
-    dates = [(lis[0], lis[2]) for lis in G.edges(data='date')]
+    print('Sorting By Dates')
+    dates = set([(lis[0], lis[2]) for lis in G.edges(data='date')])
     dates_sorted = sorted(dates,key=itemgetter(1))
-    articles = np.asarray(dates_sorted)[:,0][::-1]
+    papers = np.asarray(dates_sorted)[:,0][::-1]
 
-    mapping = {a: i for i,a in enumerate(articles)}
 
-    i = len(articles)
+    print('Mapping')
+    mapping = {a: i for i,a in enumerate(papers)}
+
+    i = len(papers)
     for node in G.nodes:
         if node not in mapping:
             mapping[node] = i
@@ -64,38 +66,17 @@ def nx_to_edgelist(): #G=None
         mapping[author] = i
         i += 1
 
-    #Update function to write reverse mapping to document?
-    n_paper=len(G.nodes)
-    with open(file='paper2paper_edgelist', mode = 'w', encoding='utf-8') as f:
-        for i in G.edges():
+    print('Writing Edgelists')
+    with open(file='./Data/paper2paper_edgelist', mode = 'w', encoding='utf-8') as f:
+        for k in G.edges():
                 #We map all article values to a value between 1 and len articles         
-            f.write(str(mapping[i[0]]) + ' ' + str(mapping[i[1]]) + ' 1.0\n')
+            f.write(str(mapping[k[0]]) + ' ' + str(mapping[k[1]]) + ' 1.0\n')
 
-    with open(file='author2paper_edgelist', mode = 'w', encoding='utf-8') as f:
-        for i in G1.edges():
+    with open(file='./Data/author2paper_edgelist', mode = 'w', encoding='utf-8') as f:
+        for k in G1.edges():
                 #We map all article values to a value between 1 and len articles
                 
-            f.write(str(mapping[i[1]]) + ' ' + str(mapping[i[0]]+n_paper) + ' 1.0\n')
-
-# def create_edgelists():
-#     G1 = load_data(path="./Data/paper2paper.gml")
-#     print("First Graph Loaded")
-#     G2 = load_data(path="./Data/author2paper.gml")
-#     print("Data Loaded")
-
-#     # This piece of code handles papers that appear in the citation network,
-#     # but not in the author-paper network
-#     nodelist = list(G1.nodes())
-#     for node in tqdm(nodelist):
-#         if not G2.has_node(node):
-#             G1.remove_node(node)
-
-    
-
-#     print("Saving first edgelist")
-#     nx_to_edgelist("Data/paper2paper_edgelist", G1)
-#     print("Saving second edgelist")
-#     nx_to_edgelist("Data/author2paper_edgelist", G2)
+            f.write(str(mapping[k[1]]) + ' ' + str(mapping[k[0]]) + ' 1.0\n')
 
 if __name__ == '__main__':
     nx_to_edgelist()
