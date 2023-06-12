@@ -24,10 +24,10 @@ def create_subgraph(mode = "paper2paper", nodes=1000):
 #Converts nx graph to edgelist. Takes nx graph.
 def nx_to_edgelist():
 
-    G=load_data(path="./Data/paper2paper.gml")
+    G=load_data(path="./Data/paper2paper_2000_gcc.gml")
 
     print('First Graph Loaded')
-    G1=load_data(path="./Data/author2paper.gml")
+    G1=load_data(path="./Data/author2paper_2000_gcc.gml")
 
     print('Second Graph Loaded')
 
