@@ -1,19 +1,20 @@
-from load_data import load_subgraph
 from load_data import load_data
 import numpy as np
 import scipy
 import networkx as nx
 from tqdm import tqdm
+from operator import itemgetter
 
 
 
 def initialize(k=2, combined=True):
-    G1 = load_data(path="./Data/paper2paper.gml")
+    G1 = load_data(path="./Data/paper2paper_2000_gcc.gml")
     print("First Graph Loaded")
-    G2 = load_data(path="./Data/author2paper.gml")
+    G2 = load_data(path="./Data/author2paper_2000_gcc.gml")
 
     #The Author to Paper graph is loaded as a directed graph.
 
+    print("Fixing Second Graph Structure")
     G2 = G2.to_undirected()
 
 
@@ -26,11 +27,21 @@ def initialize(k=2, combined=True):
         if not G2.has_node(node):
             G1.remove_node(node)
 
+    dates = set([(lis[0], lis[2]) for lis in G1.edges(data='date')])
+    dates_sorted = sorted(dates, key=itemgetter(1))
+    paperorder = list(np.asarray(dates_sorted)[:, 0][::-1])
+
+
+
+    #Some papers are never cited
+    paperset = set(paperorder)
+    for node in G1.nodes:
+        if node not in paperset:
+            paperorder.append(node)
 
     if combined:
         #We order by papers in the adjacency matrices so we can easily concatenate.
 
-        paperorder = [paper for paper in list(G1.nodes)]
         authororder = [author for author in list(G2.nodes) if author.startswith('A')]
         n = len(paperorder)
         m = len(authororder)
@@ -59,16 +70,10 @@ def initialize(k=2, combined=True):
         #We now perform SVD to get u (p*) and v
 
         print("Computing Eigenvectors")
-        #p_star, _, V = scipy.sparse.linalg.svds(adj, k=k+1)
 
         _, eigenvectors = scipy.sparse.linalg.eigsh(L, k=k+1)
 
         print("Eigenvectors Computed")
-        #U is the initialization of citing papers (p*)
-        #V is the initalization of both cited papers (p) and authors (a)
-
-        #p = V.T[:n]
-        #a = V.T[n:]
 
         p_star = eigenvectors[:n, 1:k+1]
         p = eigenvectors[n:2*n, 1:k+1]
