@@ -35,7 +35,7 @@ def initialize(k=2, combined=True):
 
     #Some papers are never cited
     paperset = set(paperorder)
-    for node in G1.nodes:
+    for node in tqdm(list(G1.nodes)):
         if node not in paperset:
             paperorder.append(node)
 
@@ -64,25 +64,33 @@ def initialize(k=2, combined=True):
         top_row = scipy.sparse.hstack([ul, adj], dtype = np.single)
         bot_row = scipy.sparse.hstack([adj.T, lr], dtype = np.single)
 
-        L = scipy.sparse.vstack([top_row, bot_row], dtype = np.single)
+        A = scipy.sparse.vstack([top_row, bot_row], dtype = np.single)
+        D = scipy.sparse.diags([d[0] for d in A.sum(axis=1).A])
+        Dinv = scipy.sparse.diags([d[0]**-1 if d[0] != 0 else d[0] for d in A.sum(axis=1).A])
+        L = D - A
+
+
+        print("Creating L_sym")
+        sqrtDeg = Dinv.sqrt()
+        L_sym =  sqrtDeg @ L @ sqrtDeg
 
 
         #We now perform SVD to get u (p*) and v
 
         print("Computing Eigenvectors")
 
-        _, eigenvectors = scipy.sparse.linalg.eigsh(L, k=k+1)
+        eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k+1)
 
         print("Eigenvectors Computed")
 
-        p_star = eigenvectors[:n, 1:k+1]
-        p = eigenvectors[n:2*n, 1:k+1]
-        a = eigenvectors[2*n:, 1:k+1]
+        p_star = eigenvectors[:n, :k]
+        p = eigenvectors[n:2*n, :k]
+        a = eigenvectors[2*n:, :k]
 
-        return p_star, p, a
+        return p_star, p, a, eigenvalues[:k]
 
 
-    #This should maybe use SVD instead??
+
     else:
         Graphs = [G1, G2]
 
@@ -111,7 +119,7 @@ def initialize(k=2, combined=True):
 def save_initializations(k=2, combined=True):
 
     if combined:
-        p_star, p, a = initialize(k=k, combined=True)
+        p_star, p, a, eigenvalues = initialize(k=k, combined=True)
 
         inits = [p_star, p, a]
         name = ['p_star','p','a']
@@ -127,11 +135,15 @@ def save_initializations(k=2, combined=True):
         with open(f"./Embeddings/{name[i]}_init.emb", 'w',encoding="utf-8") as f:
             f.write(f"{np.shape(values)}\n")
             for i in tqdm(range(len(values))):
-                f.write(f"{i}" + " " + f"{values[i][0]}"+" "+f"{values[i][1]}\n")
+                f.write(f"{i}")
+                for j in range(np.shape(values)[1]):
+                    f.write(" " + f"{values[i,j]}")
+                f.write("\n")
 
+    print("Embeddings saved")
+    print("Eigenvalues: "+"f{eigenvalues}")
 
-#Tilføjet in case man vil kalde save initialization fra andre filer
 if __name__ == '__main__':
-    save_initializations(k=2, combined=True)
+    save_initializations(k=20, combined=True)
     
     print('debug')
