@@ -23,29 +23,41 @@ for node in G.nodes:
         G_index[node] = i
         i += 1
 
-degreelist=[]
+indegreelist=[]
 for i in range(len(G.nodes())):
-    a = list(G.degree())
+    a = list(G.in_degree())
     a2=a[i][1]
     a1=G_index[a[i][0]]
-    degreelist.append([a1,a2])
+    indegreelist.append([a1,a2])
 
-degreelist_sorted = sorted(degreelist, key=itemgetter(0))
+outdegreelist=[]
+for j in range(len(G.nodes())):
+    a = list(G.out_degree())
+    a2=a[i][1]
+    a1=G_index[a[i][0]]
+    outdegreelist.append([a1,a2])
+
+indegreelist_sorted = sorted(indegreelist, key=itemgetter(0))
+outdegreelist_sorted = sorted(outdegreelist, key=itemgetter(0))
 
 paper2paper_edgelist_deleted = paper2paper_edgelist
+edges_deleted=[]
 random.seed(0)
-i=0
+z=0
 while i<=(0.01*len(paper2paper_edgelist_deleted[:,0])):
     possible_remove = random.choice(list(enumerate(paper2paper_edgelist_deleted)))
     array_remove=possible_remove[1]
     index_remove=possible_remove[0]
     citing=int(array_remove[0])
     cited=int(array_remove[1])
-    if degreelist_sorted[citing][1]<=1 or degreelist_sorted[cited][1]<=1:
+    if indegreelist_sorted[citing][1]<=1 or indegreelist_sorted[cited][1]<=1 or outdegreelist_sorted[citing][1]<=1 or indegreelist_sorted[cited][1]<=1:
         continue
     else:
+        outdegreelist[citing][1]-=1
+        indegreelist[cited][1]-=1
+        edges_deleted.append(index_remove)
         paper2paper_edgelist_deleted=np.delete(paper2paper_edgelist_deleted, index_remove, 0)
-        i+=1
+        z+=1
 
 print(len(paper2paper_edgelist))
 print(len(paper2paper_edgelist_deleted))
