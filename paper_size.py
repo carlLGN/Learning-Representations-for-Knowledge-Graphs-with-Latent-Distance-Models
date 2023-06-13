@@ -19,6 +19,19 @@ def read_emb3(path):
                 points.append((s,u,v))
     return points
 
+
+def read_emb_general(path):
+    points=[]
+    with open(path, 'r') as f:
+        for line in f.readlines():
+            tokens = line.strip().split()
+            if len(tokens)==2:
+                pass
+            else:
+                points.append([float(tokens[i]) for i in range(len(tokens))])
+    return points
+
+
 # debuging
 #print(np.shape(np.asarray(read_emb('./Embeddings/a_init.emb'))))
 #print(len(np.unique(np.asarray(read_emb3('Data/author2paper_edgelist'))[:,0])))
@@ -31,7 +44,7 @@ def paper_size(data):
 
     amount_of_citations = np.zeros(np.max(all_paper_citations).astype(int)+1)
     for i in range(len(all_paper_citations)):
-        amount_of_citations[all_paper_citations[i].astype(int)] += 1
+        amount_of_citations[int(all_paper_citations[i])] += 1
     return amount_of_citations
 
 
