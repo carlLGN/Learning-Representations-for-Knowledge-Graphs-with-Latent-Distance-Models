@@ -5,8 +5,6 @@ import networkx as nx
 from tqdm import tqdm
 from operator import itemgetter
 
-
-
 def initialize(k=2):
     G1 = load_data(path="./Data/paper2paper_2000_gcc.gml")
     print("First Graph Loaded")
@@ -69,7 +67,7 @@ def initialize(k=2):
     L = D - A
 
     print("Getting eigenvectors for L")
-    _, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k)
+    eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k)
 
 
     print("Creating L_sym")
@@ -89,12 +87,12 @@ def initialize(k=2):
     p = eigenvectors[n:2*n, :k]
     a = eigenvectors[2*n:, :k]
 
-    return p_star, p, a, eigenvalues[:k], eigenvectors_L
+    return p_star, p, a, eigenvalues, eigenvectors_L, eigenvalues_L
 
 def save_initializations(k=2):
 
 
-    p_star, p, a, eigenvalues, e_L = initialize(k=k)
+    p_star, p, a, eigenvalues, evec_L, eval_L = initialize(k=k)
 
     inits = [p_star, p, a]
     name = ['p_star','p','a']
@@ -109,7 +107,7 @@ def save_initializations(k=2):
                 for j in range(np.shape(values)[1]):
                     f.write(" " + f"{values[i,j]}")
                 f.write("\n")
-
+    print("Eigenvalues for L_sym: " + f"{eigenvalues}")
     print("Embeddings saved")
 
     print("Saving L's Eigenvectors")
@@ -120,7 +118,7 @@ def save_initializations(k=2):
             for j in range(np.shape(e_L)[1]):
                 f.write(" " + f"{e_L[i,j]}")
             f.write("\n")
-    print("Eigenvalues: "+f"{eigenvalues}")
+    print("Eigenvalues for L: "+f"{eval_L}")
 
 if __name__ == '__main__':
     save_initializations(k=20)
