@@ -50,14 +50,14 @@ def create_training_set():
 
     indegreelistpaper=[]
     indpaper = list(G.in_degree())
-    for i in range(len(G.nodes())):
+    for i in tqdm(range(len(G.nodes()))):
         ind_i=indpaper[i][1]
         index_i=G_index[indpaper[i][0]]
         indegreelistpaper.append([index_i,ind_i])
 
     outdegreelistpaper=[]
     outdpaper = list(G.out_degree())
-    for j in range(len(G.nodes())):
+    for j in tqdm(range(len(G.nodes()))):
         outd_j=outdpaper[j][1]
         index_j=G_index[outdpaper[j][0]]
         outdegreelistpaper.append([index_j,outd_j])
@@ -78,6 +78,7 @@ def create_training_set():
             citing=int(array_remove[0])
             cited=int(array_remove[1])
             if indegreelist_sorted_paper[cited][1]<=1 or outdegreelist_sorted_paper[citing][1]<=1:
+                print('not it')
                 continue
             else:
                 outdegreelistpaper[citing][1]-=1
@@ -89,14 +90,14 @@ def create_training_set():
 
     indegreelistauthor=[]
     indauthor = list(G1.in_degree())
-    for i in range(len(G1.nodes())):
+    for i in tqdm(range(len(G1.nodes()))):
         ind_i=indauthor[i][1]
         index_i=G_index[indauthor[i][0]]
         indegreelistauthor.append([index_i, ind_i])
 
     outdegreelistauthor=[]
     outdauthor=list(G1.out_degree())
-    for j in range(len(G1.nodes())):
+    for j in tqdm(range(len(G1.nodes()))):
         outd_j=outdauthor[j][1]
         index_j=G_index[outdauthor[j][0]]
         outdegreelistauthor.append([index_j, outd_j])
@@ -116,6 +117,7 @@ def create_training_set():
             citing=int(array_remove[0])
             cited=int(array_remove[1])
             if indegreelist_sorted_author[cited][1]<=1 or outdegreelist_sorted_author[citing][1]<=1:
+                print('not it')
                 continue
             else:
                 outdegreelistauthor[citing][1]-=1
