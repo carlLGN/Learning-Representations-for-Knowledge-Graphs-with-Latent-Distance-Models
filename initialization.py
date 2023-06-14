@@ -67,7 +67,7 @@ def initialize(k=2):
     L = D - A
 
     print("Getting eigenvectors for L")
-    eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k)
+    eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k, sigma=0,tol=1e-4, which="SM")
 
 
     print("Creating L_sym")
@@ -79,13 +79,13 @@ def initialize(k=2):
 
     print("Computing Eigenvectors")
 
-    eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k)
+    eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k, sigma=0, tol=1e-4, which="SM")
 
     print("Eigenvectors Computed")
 
-    p_star = eigenvectors[:n, :k]
-    p = eigenvectors[n:2*n, :k]
-    a = eigenvectors[2*n:, :k]
+    p_star = eigenvectors[:n, :]
+    p = eigenvectors[n:2*n, :]
+    a = eigenvectors[2*n:, :]
 
     return p_star, p, a, eigenvalues, eigenvectors_L, eigenvalues_L
 
