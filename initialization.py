@@ -5,9 +5,7 @@ import networkx as nx
 from tqdm import tqdm
 from operator import itemgetter
 
-
-
-def initialize(k=2, combined=True):
+def initialize(k=2):
     G1 = load_data(path="./Data/paper2paper_2000_gcc.gml")
     print("First Graph Loaded")
     G2 = load_data(path="./Data/author2paper_2000_gcc.gml")
@@ -39,111 +37,90 @@ def initialize(k=2, combined=True):
         if node not in paperset:
             paperorder.append(node)
 
-    if combined:
-        #We order by papers in the adjacency matrices so we can easily concatenate.
+    #We order by papers in the adjacency matrices so we can easily concatenate.
 
-        authororder = [author for author in list(G2.nodes) if author.startswith('A')]
-        n = len(paperorder)
-        m = len(authororder)
-
-
-        print("Constructing Adjacency Matrices")
-        adjp2p = nx.adjacency_matrix(G1, nodelist = paperorder)
-        adja2p = nx.bipartite.biadjacency_matrix(G2, row_order = paperorder+authororder, column_order = paperorder+authororder)[:n,n:]
-
-        #We concatenate the adjacency matrices into one adjacency matrix.
-
-        print("Concatenating")
-        adj = scipy.sparse.hstack([adjp2p,adja2p], dtype = np.single)
+    authororder = [author for author in list(G2.nodes) if author.startswith('A')]
+    n = len(paperorder)
+    m = len(authororder)
 
 
-        print("Creating Laplacian Matrix")
-        ul = scipy.sparse.csr_matrix((n,n))
-        lr = scipy.sparse.csr_matrix((n+m, n+m))
+    print("Constructing Adjacency Matrices")
+    adjp2p = nx.adjacency_matrix(G1, nodelist = paperorder)
+    adja2p = nx.bipartite.biadjacency_matrix(G2, row_order = paperorder+authororder, column_order = paperorder+authororder)[:n,n:]
 
-        top_row = scipy.sparse.hstack([ul, adj], dtype = np.single)
-        bot_row = scipy.sparse.hstack([adj.T, lr], dtype = np.single)
+    #We concatenate the adjacency matrices into one adjacency matrix.
 
-        A = scipy.sparse.vstack([top_row, bot_row], dtype = np.single)
-        D = scipy.sparse.diags([d[0] for d in A.sum(axis=1).A])
-        Dinv = scipy.sparse.diags([d[0]**-1 if d[0] != 0 else d[0] for d in A.sum(axis=1).A])
-        L = D - A
+    print("Concatenating")
+    adj = scipy.sparse.hstack([adjp2p,adja2p], dtype = np.single)
 
 
-        print("Creating L_sym")
-        sqrtDeg = Dinv.sqrt()
-        L_sym =  sqrtDeg @ L @ sqrtDeg
+    print("Creating Laplacian Matrix")
+    ul = scipy.sparse.csr_matrix((n,n))
+    lr = scipy.sparse.csr_matrix((n+m, n+m))
+
+    top_row = scipy.sparse.hstack([ul, adj], dtype = np.single)
+    bot_row = scipy.sparse.hstack([adj.T, lr], dtype = np.single)
+
+    A = scipy.sparse.vstack([top_row, bot_row], dtype = np.single)
+    D = scipy.sparse.diags([d[0] for d in A.sum(axis=1).A])
+    Dinv = scipy.sparse.diags([d[0]**-1 if d[0] != 0 else d[0] for d in A.sum(axis=1).A])
+    L = D - A
+
+    print("Getting eigenvectors for L")
+    eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k)
 
 
-        #We now perform SVD to get u (p*) and v
-
-        print("Computing Eigenvectors")
-
-        eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k+1)
-
-        print("Eigenvectors Computed")
-
-        p_star = eigenvectors[:n, :k]
-        p = eigenvectors[n:2*n, :k]
-        a = eigenvectors[2*n:, :k]
-
-        return p_star, p, a, eigenvalues[:k]
+    print("Creating L_sym")
+    sqrtDeg = Dinv.sqrt()
+    L_sym =  sqrtDeg @ L @ sqrtDeg
 
 
+    #We now perform SVD to get u (p*) and v
 
-    else:
-        Graphs = [G1, G2]
+    print("Computing Eigenvectors")
 
-        inits = []
-        for G in Graphs:
-            papers = [p for p in list(G.nodes) if p.startswith("W")]
-            authors = [a for a in list(G.nodes) if a.startswith("A")]
+    eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k)
 
-            order = papers + authors
+    print("Eigenvectors Computed")
 
-            adj = nx.adjacency_matrix(G, nodelist = order)
+    p_star = eigenvectors[:n, :k]
+    p = eigenvectors[n:2*n, :k]
+    a = eigenvectors[2*n:, :k]
 
-            A = adj + adj.T
+    return p_star, p, a, eigenvalues, eigenvectors_L, eigenvalues_L
 
-            D = np.diag(np.sum(A, axis=1))
-
-            L = D - A
-
-            Lsym = np.sqrt(np.linalg.inv(D)) @ L @ (np.sqrt(np.linalg.inv(D)))
-            _, eigenvectors = scipy.linalg.eigh(a=Lsym, subset_by_index=[1,k])
-            inits.append([eigenvectors])
-
-        return inits[0], inits[1]
+def save_initializations(k=2):
 
 
-def save_initializations(k=2, combined=True):
+    p_star, p, a, eigenvalues, evec_L, eval_L = initialize(k=k)
 
-    if combined:
-        p_star, p, a, eigenvalues = initialize(k=k, combined=True)
+    inits = [p_star, p, a]
+    name = ['p_star','p','a']
 
-        inits = [p_star, p, a]
-        name = ['p_star','p','a']
-
-    else:
-        p2p, a2p = initialize(k=k, combined=False)
-
-        inits = [p2p, a2p]
-        name = ['p2p', 'a2p']
 
     print("Saving Embeddings")
-    for i, values in enumerate(inits):
-        with open(f"./Embeddings/{name[i]}_init.emb", 'w',encoding="utf-8") as f:
+    for k, values in enumerate(inits):
+        with open(f"./Embeddings/{name[k]}_init.emb", 'w',encoding="utf-8") as f:
             f.write(f"{np.shape(values)}\n")
             for i in tqdm(range(len(values))):
                 f.write(f"{i}")
                 for j in range(np.shape(values)[1]):
                     f.write(" " + f"{values[i,j]}")
                 f.write("\n")
-
+    print("Eigenvalues for L_sym: " + f"{eigenvalues}")
     print("Embeddings saved")
-    print("Eigenvalues: "+f"{eigenvalues}")
+
+    print("Saving L's Eigenvectors")
+    with open(f"./Embeddings/eigenvectors_L.emb", 'w',encoding="utf-8") as f:
+        f.write(f"{np.shape(e_L)}\n")
+        for i in tqdm(range(len(e_L))):
+            f.write(f"{i}")
+            for j in range(np.shape(e_L)[1]):
+                f.write(" " + f"{e_L[i,j]}")
+            f.write("\n")
+    print("Eigenvalues for L: "+f"{eval_L}")
 
 if __name__ == '__main__':
-    save_initializations(k=20, combined=True)
+    save_initializations(k=20)
     
     print('debug')
