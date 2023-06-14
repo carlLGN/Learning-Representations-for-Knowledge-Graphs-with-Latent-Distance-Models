@@ -4,8 +4,9 @@ import scipy
 import networkx as nx
 from tqdm import tqdm
 from operator import itemgetter
+from paper_size import read_emb3
 
-def initialize(k=2):
+def initialize(k=2, mode="paper2paper"):
     G1 = load_data(path="./Data/paper2paper_2000_gcc.gml")
     print("First Graph Loaded")
     G2 = load_data(path="./Data/author2paper_2000_gcc.gml")
@@ -48,6 +49,18 @@ def initialize(k=2):
     adjp2p = nx.adjacency_matrix(G1, nodelist = paperorder)
     adja2p = nx.bipartite.biadjacency_matrix(G2, row_order = paperorder+authororder, column_order = paperorder+authororder)[:n,n:]
 
+    if mode == "paper2paper":
+        testset = read_emb3("./Data/test_edgelist_pp")
+        for edge in testset:
+            sending = int(edge[0])
+            receiving = int(edge[1])
+            adjp2p[sending, receiving] = 0
+        adjp2p.eliminate_zeros()
+
+    elif mode == "author2paper":
+        testset = read_emb3("./Data/test_edgelist_ap")
+
+
     #We concatenate the adjacency matrices into one adjacency matrix.
 
     print("Concatenating")
@@ -89,10 +102,10 @@ def initialize(k=2):
 
     return p_star, p, a, eigenvalues, eigenvectors_L, eigenvalues_L
 
-def save_initializations(k=2):
+def save_initializations(k=2, mode="paper2paper"):
 
 
-    p_star, p, a, eigenvalues, evec_L, eval_L = initialize(k=k)
+    p_star, p, a, eigenvalues, evec_L, eval_L = initialize(k=k, mode=mode)
 
     inits = [p_star, p, a]
     name = ['p_star','p','a']
@@ -121,6 +134,9 @@ def save_initializations(k=2):
     print("Eigenvalues for L: "+f"{eval_L}")
 
 if __name__ == '__main__':
-    save_initializations(k=20)
+
+
+
+    save_initializations(k=10, mode="paper2paper")
     
     print('debug')
