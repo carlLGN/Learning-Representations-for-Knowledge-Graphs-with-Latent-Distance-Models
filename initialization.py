@@ -141,7 +141,7 @@ def save_initializations(k=2, combined=True):
                 f.write("\n")
 
     print("Embeddings saved")
-    print("Eigenvalues: "+"f{eigenvalues}")
+    print("Eigenvalues: "+f"{eigenvalues}")
 
 if __name__ == '__main__':
     save_initializations(k=20, combined=True)
