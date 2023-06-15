@@ -1,64 +1,34 @@
-from load_data import load_data
 import numpy as np
 import scipy
-import networkx as nx
 from tqdm import tqdm
-from operator import itemgetter
 from paper_size import read_emb3
 
 def initialize(k=2, mode="paper2paper"):
-    G1 = load_data(path="./Data/paper2paper_2000_gcc.gml")
-    print("First Graph Loaded")
-    G2 = load_data(path="./Data/author2paper_2000_gcc.gml")
-
-    #The Author to Paper graph is loaded as a directed graph.
-
-    print("Fixing Second Graph Structure")
-    G2 = G2.to_undirected()
-
-
-    print("Data Loaded")
-
-    #This piece of code handles papers that appear in the citation network,
-    #but not in the author-paper netowrk
-    nodelist=list(G1.nodes())
-    for node in tqdm(nodelist):
-        if not G2.has_node(node):
-            G1.remove_node(node)
-
-    dates = set([(lis[0], lis[2]) for lis in G1.edges(data='date')])
-    dates_sorted = sorted(dates, key=itemgetter(1))
-    paperorder = list(np.asarray(dates_sorted)[:, 0][::-1])
-
-
-
-    #Some papers are never cited
-    paperset = set(paperorder)
-    for node in tqdm(list(G1.nodes)):
-        if node not in paperset:
-            paperorder.append(node)
-
-    #We order by papers in the adjacency matrices so we can easily concatenate.
-
-    authororder = [author for author in list(G2.nodes) if author.startswith('A')]
-    n = len(paperorder)
-    m = len(authororder)
-
-
-    print("Constructing Adjacency Matrices")
-    adjp2p = nx.adjacency_matrix(G1, nodelist = paperorder)
-    adja2p = nx.bipartite.biadjacency_matrix(G2, row_order = paperorder+authororder, column_order = paperorder+authororder)[:n,n:]
-
+    print("Loading Data")
     if mode == "paper2paper":
-        testset = read_emb3("./Data/test_edgelist_pp")
-        for edge in tqdm(testset):
-            sending = int(edge[0])
-            receiving = int(edge[1])
-            adjp2p[sending, receiving] = 0
-        adjp2p.eliminate_zeros()
+        pp = np.array(read_emb3("./Data/train_edgelist_pp"))
+        ap = np.array(read_emb3("./Data/author2paper_edgelist"))
 
-    elif mode == "author2paper":
-        testset = read_emb3("./Data/test_edgelist_ap")
+    elif mode =="author2paper":
+        pp = np.array(read_emb3("./Data/paper2paper_edgelist"))
+        ap = np.array(read_emb3("./Data/train_edgelist_ap"))
+
+    print("Creating Adjacency Matrices")
+
+    n = int(np.max(pp[:,1]))
+    m = int(np.max(ap[:, 1]))
+
+    data_pp = pp[:,2]
+    row_pp = pp[:,0]
+    col_pp = pp[:,1]
+
+    adjp2p = scipy.sparse.csr_matrix((data_pp, (row_pp, col_pp)), shape=(n+1,n+1))
+
+    data_ap = ap[:,2]
+    row_ap = ap[:,0]
+    col_ap = ap[:,1]
+
+    adja2p = scipy.sparse.csr_matrix((data_ap, (row_ap, col_ap)), shape=(n+1, m+1))
 
 
     #We concatenate the adjacency matrices into one adjacency matrix.
@@ -68,8 +38,8 @@ def initialize(k=2, mode="paper2paper"):
 
 
     print("Creating Laplacian Matrix")
-    ul = scipy.sparse.csr_matrix((n,n))
-    lr = scipy.sparse.csr_matrix((n+m, n+m))
+    ul = scipy.sparse.csr_matrix((n+1,n+1))
+    lr = scipy.sparse.csr_matrix((n+m+2, n+m+2))
 
     top_row = scipy.sparse.hstack([ul, adj], dtype = np.single)
     bot_row = scipy.sparse.hstack([adj.T, lr], dtype = np.single)
@@ -80,7 +50,7 @@ def initialize(k=2, mode="paper2paper"):
     L = D - A
 
     print("Getting eigenvectors for L")
-    eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k, sigma=0,tol=1e-4, which="LM")
+    eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k, sigma=0,tol=1e-3, which="LM")
 
 
     print("Creating L_sym")
@@ -92,7 +62,7 @@ def initialize(k=2, mode="paper2paper"):
 
     print("Computing Eigenvectors")
 
-    eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k, sigma=0, tol=1e-4, which="LM")
+    eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k, sigma=0, tol=1e-3, which="LM")
 
     print("Eigenvectors Computed")
 
