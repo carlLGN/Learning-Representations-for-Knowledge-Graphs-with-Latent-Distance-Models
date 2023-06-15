@@ -51,7 +51,7 @@ def initialize(k=2, mode="paper2paper"):
 
     if mode == "paper2paper":
         testset = read_emb3("./Data/test_edgelist_pp")
-        for edge in testset:
+        for edge in tqdm(testset):
             sending = int(edge[0])
             receiving = int(edge[1])
             adjp2p[sending, receiving] = 0
@@ -125,11 +125,11 @@ def save_initializations(k=2, mode="paper2paper"):
 
     print("Saving L's Eigenvectors")
     with open(f"./Embeddings/eigenvectors_L.emb", 'w',encoding="utf-8") as f:
-        f.write(f"{np.shape(e_L)}\n")
-        for i in tqdm(range(len(e_L))):
+        f.write(f"{np.shape(evec_L)}\n")
+        for i in tqdm(range(len(evec_L))):
             f.write(f"{i}")
-            for j in range(np.shape(e_L)[1]):
-                f.write(" " + f"{e_L[i,j]}")
+            for j in range(np.shape(evec_L)[1]):
+                f.write(" " + f"{evec_L[i,j]}")
             f.write("\n")
     print("Eigenvalues for L: "+f"{eval_L}")
 
