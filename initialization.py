@@ -80,7 +80,7 @@ def initialize(k=2, mode="paper2paper"):
     L = D - A
 
     print("Getting eigenvectors for L")
-    eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k, sigma=0,tol=1e-4, which="SM")
+    eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k, sigma=0,tol=1e-4, which="LM")
 
 
     print("Creating L_sym")
@@ -92,7 +92,7 @@ def initialize(k=2, mode="paper2paper"):
 
     print("Computing Eigenvectors")
 
-    eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k, sigma=0, tol=1e-4, which="SM")
+    eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k, sigma=0, tol=1e-4, which="LM")
 
     print("Eigenvectors Computed")
 
