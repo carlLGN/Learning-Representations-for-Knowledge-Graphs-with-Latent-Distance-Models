@@ -15,20 +15,20 @@ def initialize(k=2, mode="paper2paper"):
 
     print("Creating Adjacency Matrices")
 
-    n = int(np.max(pp[:,1]))
-    m = int(np.max(ap[:, 1]))
+    n = int(np.max(pp[:,1]))+1
+    m = int(np.max(ap[:,1]))+1
 
     data_pp = pp[:,2]
     row_pp = pp[:,0]
     col_pp = pp[:,1]
 
-    adjp2p = scipy.sparse.csr_matrix((data_pp, (row_pp, col_pp)), shape=(n+1,n+1))
+    adjp2p = scipy.sparse.csr_matrix((data_pp, (row_pp, col_pp)), shape=(n,n))
 
     data_ap = ap[:,2]
     row_ap = ap[:,0]
     col_ap = ap[:,1]
 
-    adja2p = scipy.sparse.csr_matrix((data_ap, (row_ap, col_ap)), shape=(n+1, m+1))
+    adja2p = scipy.sparse.csr_matrix((data_ap, (row_ap, col_ap)), shape=(n, m))
 
 
     #We concatenate the adjacency matrices into one adjacency matrix.
@@ -38,8 +38,8 @@ def initialize(k=2, mode="paper2paper"):
 
 
     print("Creating Laplacian Matrix")
-    ul = scipy.sparse.csr_matrix((n+1,n+1))
-    lr = scipy.sparse.csr_matrix((n+m+2, n+m+2))
+    ul = scipy.sparse.csr_matrix((n,n))
+    lr = scipy.sparse.csr_matrix((n+m, n+m))
 
     top_row = scipy.sparse.hstack([ul, adj], dtype = np.single)
     bot_row = scipy.sparse.hstack([adj.T, lr], dtype = np.single)
