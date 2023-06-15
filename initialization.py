@@ -50,7 +50,13 @@ def initialize(k=2, mode="paper2paper"):
     L = D - A
 
     print("Getting eigenvectors for L")
-    eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k, sigma=0,tol=1e-3, which="LM")
+
+    maxeval = scipy.sparse.linalg.eigsh(L, k=1)[0]
+    Lflip = maxeval[0]*scipy.sparse.eye(L.shape[0]) - L
+
+    bigevals, evec_L = scipy.sparse.linalg.eigsh(Lflip, k=k,tol=1e-3, which="LM")
+    eval_L = maxeval - bigevals
+    # eigenvalues_L, eigenvectors_L = scipy.sparse.linalg.eigsh(L, k=k, sigma=0,tol=1e-3, which="LM")
 
 
     print("Creating L_sym")
@@ -62,15 +68,19 @@ def initialize(k=2, mode="paper2paper"):
 
     print("Computing Eigenvectors")
 
-    eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(L_sym, k=k, sigma=0, tol=1e-3, which="LM")
+    maxeval = scipy.sparse.linalg.eigsh(L_sym, k=1)[0]
+    L_symflip = maxeval[0] * scipy.sparse.eye(L.shape[0]) - L_sym
+
+    bigevals, evec_L_sym = scipy.sparse.linalg.eigsh(L_symflip, k=k, tol=1e-3, which="LM")
+    eval_L_sym = maxeval - bigevals
 
     print("Eigenvectors Computed")
 
-    p_star = eigenvectors[:n, :]
-    p = eigenvectors[n:2*n, :]
-    a = eigenvectors[2*n:, :]
+    p_star = evec_L_sym[:n, :]
+    p = evec_L_sym[n:2*n, :]
+    a = evec_L_sym[2*n:, :]
 
-    return p_star, p, a, eigenvalues, eigenvectors_L, eigenvalues_L
+    return p_star, p, a, eval_L_sym, evec_L, eval_L
 
 def save_initializations(k=2, mode="paper2paper"):
 
@@ -107,6 +117,6 @@ if __name__ == '__main__':
 
 
 
-    save_initializations(k=10, mode="paper2paper")
+    save_initializations(k=5, mode="paper2paper")
     
     print('debug')
