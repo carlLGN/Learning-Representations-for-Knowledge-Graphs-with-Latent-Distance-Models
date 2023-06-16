@@ -17,8 +17,8 @@ class Multimodal_LDM(torch.nn.Module):
         super(Multimodal_LDM, self).__init__()
 
         #Edges
-        self.edges_pp = edges_pp.to(device)
-        self.edges_ap = edges_ap.to(device)
+        self.edges_pp = edges_pp.to(device)[[1,0], :]
+        self.edges_ap = edges_ap.to(device)[[1,0], :]
         
         #Nodes
         self.nodes_num_pp = torch.max(self.edges_pp) + 1
@@ -35,7 +35,7 @@ class Multimodal_LDM(torch.nn.Module):
         #Sampling weights
         self.sampling_weights = torch.ones(self.nodes_num_pp, dtype=torch.float, device=device)
         
-        
+        self.training_loss = []
         self.device = device
         self.seed = seed
         self.verbose = verbose
@@ -44,7 +44,7 @@ class Multimodal_LDM(torch.nn.Module):
         self.__set_seed(self.seed)
 
         #Embedding files
-        emb_file = ["./Embeddings/p_star_init.emb", "./Embeddings/p_init.emb", "./Embeddings/a_init.emb"]
+        emb_file = ["/zhome/c2/3/167669/GRL/Embeddings/p_star_init.emb", "/zhome/c2/3/167669/GRL/Embeddings/p_init.emb", "/zhome/c2/3/167669/GRL/Embeddings/a_init.emb"]
         
         #Get initial embeddings
         p_star, p, a = utils.read_embeddings(emb_file)
@@ -56,17 +56,30 @@ class Multimodal_LDM(torch.nn.Module):
         self.gamma_pp = torch.nn.Parameter(
             2 * torch.rand(size=(2*self.nodes_num_pp,), device=self.device) - 1, requires_grad=True
         )
+        self.p = torch.nn.Parameter(
+            2 * torch.rand(size=(self.nodes_num_pp, self.dim), device=self.device) - 1, requires_grad=True
+        )
+        self.p_star = torch.nn.Parameter(
+            2 * torch.rand(size=(self.nodes_num_pp, self.dim), device=self.device) - 1, requires_grad=True
+        )
+        self.a = torch.nn.Parameter(
+            2 * torch.rand(size=(self.nodes_num_ap-self.nodes_num_pp, self.dim), device=self.device) - 1, requires_grad=True
+        )
 
+        
+        
+        '''
         self.p = torch.nn.Parameter(
             torch.as_tensor(p), requires_grad=True
         )
+        
         self.p_star = torch.nn.Parameter(
             torch.as_tensor(p_star), requires_grad=True
         )
         self.a = torch.nn.Parameter(
             torch.as_tensor(a), requires_grad=True
         )
-        
+        '''
         self.epoch_num = epoch_num
         self.steps_per_epoch = spe
         self.batch_size = batch_size if batch_size else self.nodes_num_pp
@@ -99,7 +112,7 @@ class Multimodal_LDM(torch.nn.Module):
         beta_mat = beta_p_star.unsqueeze(0) + beta_a.unsqueeze(1)
         dist_mat = torch.cdist(p_star, a, p=2)
 
-        return torch.exp(beta_mat - dist_mat).sum()
+        return torch.exp(beta_mat.T - dist_mat).sum()
     
     def get_intensity_sum_pp(self, p_star_nodes=None, p_nodes=None):
         
@@ -198,41 +211,45 @@ class Multimodal_LDM(torch.nn.Module):
             print(f"Epoch loss is {epoch_loss}, stopping training")
             sys.exit(1)
 
-        if self.verbose and (current_epoch % 10 == 0 or current_epoch == self.epoch_num - 1):
+        if self.verbose and (current_epoch % 1 == 0 or current_epoch == self.epoch_num - 1):
             print(f"| Epoch = {current_epoch} | Loss/train: {epoch_loss} | Epoch Elapsed time: {time.time() - init_time}")
+            self.training_loss.append(epoch_loss.cpu().detach().numpy())
+            
 
     def __train_one_batch(self):
-
         self.train()
-
+        
+        #Sampling p_star nodes
         sampled_nodes = torch.multinomial(self.sampling_weights, self.batch_size, replacement=False)
         sampled_p_star_nodes, _ = torch.sort(sampled_nodes, dim=0)
-
-        batch_edges_pp, _ = spspmm(
-            indexA=torch.vstack((sampled_p_star_nodes, sampled_p_star_nodes)).type(torch.long),
-            valueA=torch.ones(size=(self.batch_size,), dtype=torch.float, device=self.device),
-            indexB=self.edges_pp.type(torch.long),
-            valueB=torch.ones(size=(self.edges_num_pp, ), dtype=torch.float, device=self.device),
-            m=self.nodes_num_pp, k=self.nodes_num_pp, n=self.nodes_num_pp, coalesced=True
-        )
         
+        #Paper paper graph edge sampling
+        #Edges 
+        nodes_num_pp = self.nodes_num_pp
+        edges_num_pp = self.edges_num_pp
+        A = torch.sparse_coo_tensor(indices=self.edges_pp.to(torch.long), values=torch.ones(edges_num_pp, ),
+        size=(nodes_num_pp, nodes_num_pp)).coalesce()
+        # Select the edges among the batch nodes
+        batch_idx_pp = torch.index_select(A, dim=0, index=sampled_p_star_nodes).coalesce().indices()
+        # Get the batch edges
+        batch_edges_pp = torch.vstack((sampled_p_star_nodes[batch_idx_pp[0]], batch_idx_pp[1]))
         sampled_p_nodes = torch.tensor(list(set(batch_edges_pp[1].tolist())))
+
+
         
-        
-        batch_edges_ap, _ = spspmm(
-            indexA=torch.vstack((sampled_p_star_nodes, sampled_p_star_nodes)).type(torch.long),
-            valueA=torch.ones(size=(self.batch_size,), dtype=torch.float, device=self.device),
-            indexB=self.edges_ap.type(torch.long),
-            valueB=torch.ones(size=(self.edges_num_ap, ), dtype=torch.float, device=self.device),
-            m=self.nodes_num_ap, k=self.nodes_num_ap, n=self.nodes_num_ap, coalesced=True
-        )
-        
+        #Author paper graph edge sampling
+        #Edges 
+        nodes_num_ap = self.nodes_num_ap
+        edges_num_ap = self.edges_num_ap
+        A = torch.sparse_coo_tensor(indices=self.edges_ap.to(torch.long), values=torch.ones(edges_num_ap, ),
+        size=(nodes_num_pp, nodes_num_ap)).coalesce()
+        # Select the edges among the batch nodes
+        batch_idx_ap = torch.index_select(A, dim=0, index=sampled_p_star_nodes).coalesce().indices()
+        # Get the batch edges
+        batch_edges_ap = torch.vstack((sampled_p_star_nodes[batch_idx_ap[0]], batch_idx_ap[1]))
         sampled_a_nodes = torch.tensor(list(set(batch_edges_ap[1].tolist())))
-
-        # Forward pass
-        average_batch_loss = (self.alpha*(self.forward_pp(edges=batch_edges_pp, p_star_nodes=sampled_p_star_nodes, p_nodes=sampled_p_nodes))/(len(sampled_p_nodes))
-        +(1-self.alpha)*(self.forward_ap(edges=batch_edges_ap, p_star_nodes=sampled_p_star_nodes, a_nodes = sampled_a_nodes))/(len(sampled_a_nodes)))
-
+       
+        average_batch_loss = (self.alpha*(self.forward_pp(edges=batch_edges_pp, p_star_nodes=sampled_p_star_nodes, p_nodes=sampled_p_nodes))/(len(sampled_p_nodes))+(1-self.alpha)*(self.forward_ap(edges=batch_edges_ap, p_star_nodes=sampled_p_star_nodes, a_nodes = sampled_a_nodes))/(len(sampled_a_nodes)))
         return average_batch_loss
 
     def forward_pp(self, edges, p_star_nodes, p_nodes):
@@ -252,11 +269,48 @@ class Multimodal_LDM(torch.nn.Module):
         return self.beta.detach().numpy(), self.z.detach().numpy()
 
 
+    def training_error_list(self):
+        return self.training_loss
+        
+    def get_training_errors(self):
+        with open("/zhome/c2/3/167669/GRL/Training_loss/training_loss.txt", mode = "w", encoding = "utf-8") as f:
+            for i, k in enumerate(self.training_loss):
+	            f.write(str(i) + ' ' + str(k) + '\n')
+	            
+	            
+    def save_model(self, path):
+        torch.save(self.state_dict(), f'/zhome/c2/3/167669/GRL/Embeddings/{self.alpha}/{path}')
+
     def save_embs(self, path, format="word2vec"):
+        if format == "torch":
+            torch.save(model.state_dict(), '/zhome/c2/3/167669/GRL/Embeddings/{self.alpha}/ldm_p_alpha={self.alpha}.emb')
+            
+			
+        if format == "word2vec":
+           pass
+        '''
+        print("Writing p embeddings")
+        with open(f'/zhome/c2/3/167669/GRL/Embeddings/{self.alpha}/ldm_p_alpha={self.alpha}.emb', 'w', encoding='utf-8') as f:
+            for i in range(self.nodes_num_pp):
+                f.write(str(i) + ' ' + str(self.p.cpu().detach().numpy()[i][0]) + ' ' + str(self.p.cpu().detach().numpy()[i][1]) + '\n')
+        
+        print("Writing pstar embeddings")
+        with open(f'/zhome/c2/3/167669/GRL/Embeddings/{self.alpha}/ldm_p_star_alpha={self.alpha}.emb', 'w', encoding='utf-8') as f:
+            for i in range(self.nodes_num_pp):
+                f.write(str(i) + ' ' + str(self.p_star.cpu().detach().numpy()[i][0]) + ' ' + str(self.p_star.cpu().detach().numpy()[i][1]) + '\n')
+        print("Writing a embeddings")        
+        with open(f'/zhome/c2/3/167669/GRL/Embeddings/{self.alpha}/ldm_a_alpha={self.alpha}.emb', 'w', encoding='utf-8') as f:
+            for i in range(self.nodes_num_ap-self.nodes_num_pp):
+                f.write(str(i) + ' ' + str(self.a.cpu().detach().numpy()[i][0]) + ' ' + str(self.a.cpu().detach().numpy()[i][1]) + '\n')
 
-        assert format == "word2vec", "Only acceptable format is word2vec."
+        dim_beta=len(self.beta_ap)
+        with open(f'/zhome/c2/3/167669/GRL/Embeddings/{self.alpha}/ldm_beta={self.alpha}.emb', 'w', encoding='utf-8') as f:
+            for i in range(dim_beta):
+                f.write(str(i) + ' ' + str(self.beta_ap.cpu().detach().numpy()[i][0]) + ' ' + str(self.beta_ap.cpu().detach().numpy()[i][1]) + '\n')
+        
+        dim_gamma=len(self.gamma_pp)
+        with open(f'/zhome/c2/3/167669/GRL/Embeddings/{self.alpha}/ldm_beta={self.alpha}.emb', 'w', encoding='utf-8') as f:
+            for i in range(dim_gamma):
+                f.write(str(i) + ' ' + str(self.gamma_pp.cpu().detach().numpy()[i][0]) + ' ' + str(self.gamma_pp.cpu().detach().numpy()[i][1]) + '\n')
+        '''
 
-        with open(path, 'w') as f:
-            f.write(f"{self.nodes_num} {self.dim}\n")
-            for i in range(self.nodes_num):
-                f.write("{} {}\n".format(i, ' '.join(str(value) for value in self.z[i, :].detach().cpu().numpy())))
