@@ -49,12 +49,12 @@ def paper_size(data):
 
 
 def plot_paper_size(path):
-    data = np.asarray(read_emb(path))
+    data = np.asarray(read_emb_general(path))
 
-    x = data[:, 0]
-    y = data[:, 1]
+    x = data[:, -2]
+    y = data[:, -3]
 
-    s = paper_size(paper2paper_edgelist).astype(float)*2
+    s = paper_size(paper2paper_edgelist)[:100000].astype(float)*2
     color = 1/np.sum(s)*s
     plt.scatter(x, y, s=s, c=color, alpha=.8,cmap=mpl.colormaps['winter_r'],edgecolors='black', linewidth=0.3)
     plt.colorbar()
@@ -63,20 +63,20 @@ def plot_paper_size(path):
 
 def author_size(data):
     # Index occurs every time a auhtor has written a paper.
-    all_authors = data[:,0]
+    all_authors = data[:,1] - np.max(data[:,0]+1)
 
-    amount_of_papers_written = np.zeros(np.max(all_authors).astype(int) + 1)
+    amount_of_authors = np.zeros(np.max(all_authors).astype(int) + 1)
     for i in range(len(all_authors)):
-        amount_of_papers_written[all_authors[i].astype(int)] += 1
-    return amount_of_papers_written
+        amount_of_authors[all_authors[i].astype(int)] += 1
+    return amount_of_authors
 
 def plot_author_size(path):
-    data = np.asarray(read_emb(path))
+    data = np.asarray(read_emb_general(path))
 
-    x = data[:, 0]
-    y = data[:, 1]
+    x = data[:, -2]
+    y = data[:, -3]
 
-    s = paper_size(author2paper_edgelist).astype(float)*2
+    s = author_size(author2paper_edgelist).astype(float)*2
     color = 1/np.sum(s)*s
     plt.scatter(x, y, s=s, c=color, alpha=.8,cmap=mpl.colormaps['winter_r'],edgecolors='black', linewidth=0.3)
     plt.colorbar()
@@ -86,14 +86,14 @@ def plot_author_size(path):
 
 
 if __name__ == '__main__':
-    author2paper_edgelist = np.asarray(read_emb3('Data/author2paper_edgelist'))
+    author2paper_edgelist = np.asarray(read_emb3('Data/train_edgelist_ap'))
     # print(author2paper_edgelist)
 
     paper2paper_edgelist = np.asarray(read_emb3('Data/paper2paper_edgelist'))
     # print(paper2paper_edgelist)
 
-    print(plot_paper_size('./Embeddings/p_init.emb'))
-    #print(plot_paper_size('./Embeddings/a_init.emb'))
+    #print(plot_paper_size('./Embeddings/p_init_p2p.emb'))
+    print(plot_author_size('./Embeddings/a_init_p2p.emb'))
 
 #def author_size():
 #    count_papers_pr_author = np.zeros()
