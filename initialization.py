@@ -26,9 +26,9 @@ def initialize(k=2, mode="paper2paper"):
 
     data_ap = ap[:,2]
     row_ap = ap[:,0]
-    col_ap = ap[:,1]
+    col_ap = ap[:,1]-n
 
-    adja2p = scipy.sparse.csr_matrix((data_ap, (row_ap, col_ap)), shape=(n, m))
+    adja2p = scipy.sparse.csr_matrix((data_ap, (row_ap, col_ap)), shape=(n, m-n))
 
 
     #We concatenate the adjacency matrices into one adjacency matrix.
@@ -39,7 +39,7 @@ def initialize(k=2, mode="paper2paper"):
 
     print("Creating Laplacian Matrix")
     ul = scipy.sparse.csr_matrix((n,n))
-    lr = scipy.sparse.csr_matrix((n+m, n+m))
+    lr = scipy.sparse.csr_matrix((m, m))
 
     top_row = scipy.sparse.hstack([ul, adj], dtype = np.single)
     bot_row = scipy.sparse.hstack([adj.T, lr], dtype = np.single)
@@ -117,6 +117,6 @@ if __name__ == '__main__':
 
 
 
-    save_initializations(k=5, mode="paper2paper")
+    save_initializations(k=5, mode="author2paper")
     
     print('debug')
