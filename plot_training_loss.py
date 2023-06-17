@@ -14,28 +14,57 @@ def plot_training_loss(data):
     fig, ax = plt.subplots()
     ax.plot(data[:,0],mean_loss, color='blue')
     ax.fill_between(data[:,0], CI[0], CI[1], alpha=.4, color='red')
+    #ax.set_title('Training loss: Random initialization')
     plt.show()
 
+def plot_training_loss_combined(data_random,data_init):
+    mean_loss_random = [np.mean(data_random[i,1:]) for i in range(len(data_random[:,0]))]
+    std_loss_random = [data_random[i,1:].std() for i in range(len(data_random[:,0]))]
+    CI_random = st.t.interval(confidence=0.95, df=len(data_random[:,0])-1, loc=mean_loss_random, scale=std_loss_random)
+
+    mean_loss_init = [np.mean(data_init[i, 1:]) for i in range(len(data_init[:, 0]))]
+    std_loss_init = [data_init[i, 1:].std() for i in range(len(data_init[:, 0]))]
+    CI_init = st.t.interval(confidence=0.95, df=len(data_init[:, 0]) - 1, loc=mean_loss_init,
+                              scale=std_loss_init)
+
+    fig, ax = plt.subplots()
+
+    ax.plot(data_random[:,0],mean_loss_random, color='blue',label='Random initialization')
+    ax.fill_between(data_random[:,0], CI_random[0], CI_random[1], alpha=.4, color='purple',label='CI random initialization')
+
+    ax.plot(data_init[:, 0], mean_loss_init, color='red',label='Spectral relaxation initialization')
+    ax.fill_between(data_init[:, 0], CI_init[0], CI_init[1], alpha=.4, color='orange',label='CI spectral relaxation initialization')
+    plt.legend(loc='upper right')
+    plt.show()
 
 if __name__ == '__main__':
-    data = []
+    data_random = []
     with open('Data/training_loss.txt', mode='r', encoding='utf-8') as f:
         lines = f.readlines()
         for line in lines:
             line = line.split()
             line = [float(x) for x in line]
-            data.append(line)
-    data = np.array(data)
-    #data[4119][8] = data[4119][7]
-    #data[4529][8] = data[4529][7]
-    #data[4483][8] = data[4483][7]
-    #data = np.delete(data, 8, 1)
+            data_random.append(line)
+    data_random = np.array(data_random)
     for i in range(5000):
         for j in range(1, 11, 1):
-            if data[i, j] >= 300:
-                data[i, j] = min(data[i, 1:])
+            if data_random[i, j] >= 800:
+                data_random[i, j] = min(data_random[i, 1:])
 
+    data_init = []
+    with open('Data/training_loss_init.txt', mode='r', encoding='utf-8') as f:
+        lines = f.readlines()
+        for line in lines:
+            line = line.split()
+            line = [float(x) for x in line]
+            data_init.append(line)
+    data_init = np.array(data_init)
+    for i in range(5000):
+        for j in range(1, 11, 1):
+            if data_init[i, j] >= 800:
+                data_init[i, j] = min(data_init[i, 1:])
 
-    plot_training_loss(data[:4000])
+    #plot_training_loss(data)
+    plot_training_loss_combined(data_random,data_init)
 
-    print('debug')
+    #print('debug')
