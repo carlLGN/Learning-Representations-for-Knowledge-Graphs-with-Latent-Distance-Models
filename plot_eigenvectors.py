@@ -19,17 +19,17 @@ eigenvalues_a2p = np.array([10.44176416,6.30759595,3.18412723,1.06012389,0.06225
 #plt.plot(data_merged[:,0],abs(data_merged[:,1]))
 
 fig, axs = plt.subplots(2, 3)
-axs[0,0].plot(np.asarray(data_merged)[:,0],np.asarray(data_merged)[:,-1],c='blue')
+axs[0,0].scatter(np.arange(len(data_merged)),np.asarray(data_merged)[:,-1],c='blue',s=0.1)
 axs[0,0].set_title('Eigenvector 1')
-axs[0,1].plot(np.asarray(data_merged)[:,0],np.asarray(data_merged)[:,-2],c='blue')
+axs[0,1].scatter(np.arange(len(data_merged)),np.asarray(data_merged)[:,-2],c='blue',s=0.1)
 axs[0,1].set_title('Eigenvector 2')
-axs[0,2].plot(np.asarray(data_merged)[:,0],np.asarray(data_merged)[:,-3],c='blue')
+axs[0,2].scatter(np.arange(len(data_merged)),np.asarray(data_merged)[:,-3],c='blue',s=0.1)
 axs[0,2].set_title('Eigenvector 3')
-axs[1,0].plot(np.asarray(data_merged)[:,0],np.asarray(data_merged)[:,-4],c='blue')
+axs[1,0].scatter(np.arange(len(data_merged)),np.asarray(data_merged)[:,-4],c='blue',s=0.1)
 axs[1,0].set_title('Eigenvector 4')
-axs[1,1].plot(np.asarray(data_merged)[:,0],np.asarray(data_merged)[:,-5],c='blue')
+axs[1,1].scatter(np.arange(len(data_merged)),np.asarray(data_merged)[:,-5],c='blue',s=0.1)
 axs[1,1].set_title('Eigenvector 5')
-axs[1,2].scatter(np.arange(len(eigenvalues_Lsym_p2p))+1,eigenvalues_Lsym_p2p[::-1],c='blue')
+axs[1,2].scatter(np.arange(len(eigenvalues_p2p))+1,eigenvalues_Lsym_p2p[::-1],c='blue')
 axs[1,2].set_title('Eigenvalues')
 
 
