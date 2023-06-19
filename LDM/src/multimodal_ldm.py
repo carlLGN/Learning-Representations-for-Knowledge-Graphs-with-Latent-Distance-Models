@@ -248,8 +248,8 @@ class Multimodal_LDM(torch.nn.Module):
         # Get the batch edges
         batch_edges_ap = torch.vstack((sampled_p_star_nodes[batch_idx_ap[0]], batch_idx_ap[1]))
         sampled_a_nodes = torch.tensor(list(set(batch_edges_ap[1].tolist())))
-       
-        average_batch_loss = (self.alpha*(self.forward_pp(edges=batch_edges_pp, p_star_nodes=sampled_p_star_nodes, p_nodes=sampled_p_nodes))/(len(sampled_p_nodes))+(1-self.alpha)*(self.forward_ap(edges=batch_edges_ap, p_star_nodes=sampled_p_star_nodes, a_nodes = sampled_a_nodes))/(len(sampled_a_nodes)))
+        average_batch_loss = (self.alpha) * (
+        self.forward_pp(edges=batch_edges_pp, p_star_nodes=sampled_p_star_nodes, p_nodes=sampled_p_nodes)) * (len(sampled_p_nodes) / (len(sampled_p_nodes) + len(sampled_a_nodes))) + (1 - self.alpha) * (self.forward_ap(edges=batch_edges_ap, p_star_nodes=sampled_p_star_nodes,a_nodes=sampled_a_nodes)) * (len(sampled_p_nodes) / (len(sampled_p_nodes) + len(sampled_a_nodes)))
         return average_batch_loss
 
     def forward_pp(self, edges, p_star_nodes, p_nodes):
