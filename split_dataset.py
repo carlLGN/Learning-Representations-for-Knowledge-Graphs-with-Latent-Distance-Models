@@ -1,13 +1,9 @@
-from paper_size import read_emb3
+from visualization_utils import read_emb3
 import random
 import tqdm
 
 
-
-
-
-
-
+'''Script splits dataset into train and test edgelists, given edgelists. Selects 1% of edges to be test-edges'''
 if __name__ == '__main__':
     edgelist_pp = read_emb3('./Data/paper2paper_edgelist')
     p_star = [int(x[0]) for x in edgelist_pp]

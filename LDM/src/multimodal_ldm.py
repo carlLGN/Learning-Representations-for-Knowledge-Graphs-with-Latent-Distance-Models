@@ -3,7 +3,7 @@
 
 import torch
 from torch_sparse import spspmm
-import src.utils as utils
+import LDM.src.utils as utils
 import math
 import time
 import sys
@@ -44,10 +44,10 @@ class Multimodal_LDM(torch.nn.Module):
         self.__set_seed(self.seed)
 
         #Embedding files
-        emb_file = ["/zhome/c2/3/167669/GRL/Embeddings/p_star_init.emb", "/zhome/c2/3/167669/GRL/Embeddings/p_init.emb", "/zhome/c2/3/167669/GRL/Embeddings/a_init.emb"]
+        #emb_file = ["/zhome/c2/3/167669/GRL/Embeddings/p_star_init.emb", "/zhome/c2/3/167669/GRL/Embeddings/p_init.emb", "/zhome/c2/3/167669/GRL/Embeddings/a_init.emb"]
         
         #Get initial embeddings
-        p_star, p, a = utils.read_embeddings(emb_file)
+        #p_star, p, a = utils.read_embeddings(emb_file)
         
         # Initialize the parameters
         self.beta_ap = torch.nn.Parameter(

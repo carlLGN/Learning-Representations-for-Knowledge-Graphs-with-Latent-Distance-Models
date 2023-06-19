@@ -1,8 +1,10 @@
 import numpy as np
 import scipy
 from tqdm import tqdm
-from paper_size import read_emb3
+from visualization_utils import read_emb3
 
+'''These functions perform spectral initialization as well as finding the eigenvalues and eigenvectors for L
+   based on a mode, which selects which edgelists to load. The other function writes the embeddings to a document'''
 def initialize(k=2, mode="paper2paper"):
     print("Loading Data")
     if mode == "paper2paper":
