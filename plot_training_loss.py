@@ -46,22 +46,22 @@ if __name__ == '__main__':
             line = [float(x) for x in line]
             data_random.append(line)
     data_random = np.array(data_random)
-    for i in range(5000):
+    for i in range(10000):
         for j in range(1, 11, 1):
-            if data_random[i, j] >= 800:
+            if data_random[i, j] >= 350000:
                 data_random[i, j] = min(data_random[i, 1:])
 
     data_init = []
-    with open('Data/training_loss_init.txt', mode='r', encoding='utf-8') as f:
+    with open('Data/training_loss_init_embeddings.txt', mode='r', encoding='utf-8') as f:
         lines = f.readlines()
         for line in lines:
             line = line.split()
             line = [float(x) for x in line]
             data_init.append(line)
     data_init = np.array(data_init)
-    for i in range(5000):
+    for i in range(10000):
         for j in range(1, 11, 1):
-            if data_init[i, j] >= 800:
+            if data_init[i, j] >= 850000:
                 data_init[i, j] = min(data_init[i, 1:])
 
     #plot_training_loss(data)
